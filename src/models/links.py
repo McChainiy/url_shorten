@@ -1,18 +1,27 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+import uuid
+from sqlalchemy import String, ForeignKey, DateTime
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+
 from src.models.base import Base
 
+# модели сгенерировал копилот
 class Link(Base):
     __tablename__ = "links"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    original_url = Column(String, nullable=False)
-    short_code = Column(String, unique=True, index=True, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    clicks = Column(Integer, default=0)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    expires_at = Column(DateTime(timezone=True), nullable=True)
-    
-    user = relationship("User", back_populates="links")
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="links",
+    )
