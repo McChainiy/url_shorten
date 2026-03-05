@@ -1,8 +1,12 @@
+# src/auth/models.py
 import uuid
-from sqlalchemy.orm import Mapped
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTableUUID
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID
+from sqlalchemy.orm import relationship
 from src.models.base import Base
 
-
 class User(SQLAlchemyBaseUserTableUUID, Base):
-    pass
+    links = relationship(
+        "Link",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
