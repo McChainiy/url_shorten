@@ -14,7 +14,7 @@ import datetime
 import urllib.parse
 
 from src.auth.dependencies import current_optional_active_user
-
+from src.utils.link_service import LinkService
 
 router = APIRouter(prefix="/links", tags=["links"])
 
@@ -25,6 +25,12 @@ async def create_short_link(
     session: AsyncSession = Depends(get_async_session),
     user: Optional[User] = Depends(current_optional_active_user)
 ):
+    try:
+        expires_at = LinkService.validate_expiry_date(data.expires_at, user)
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
     if data.custom_alias:
         short_code = await check_alias(session, data.custom_alias)
@@ -32,18 +38,15 @@ async def create_short_link(
     else:
         short_code = await generate_short_code(session)
 
-    if user:
-        link = Link(
-            original_url=str(data.original_url),
-            short_code=short_code,
-            user_id=user.id 
-        )
-    else:
-        link = Link(
-            original_url=str(data.original_url),
-            short_code=short_code,
-            user_id=None
-        )
+    user_id = user.id if user else None
+
+    link = Link(
+        original_url=str(data.original_url),
+        short_code=short_code,
+        user_id=user_id,
+        expires_at=expires_at,
+        is_active=True
+    )
 
     session.add(link)
     await session.commit()

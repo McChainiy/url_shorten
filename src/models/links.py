@@ -14,13 +14,13 @@ class Link(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     original_url: Mapped[str] = mapped_column(String, nullable=False)
     short_code: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None))
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_use: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=lambda: datetime.now(timezone.utc), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=True)
     clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc), nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, default=None, nullable=True)
 
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
     user: Mapped[Optional["User"]] = relationship("User", back_populates="links")
