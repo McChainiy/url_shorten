@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,9 +8,10 @@ from src.models.links import Link
 from src.auth.models import User
 from src.utils.shortener import generate_short_code
 from src.utils.check_alias import check_alias
-from typing import Optional
-from sqlalchemy import select
+from typing import Optional, List
+from sqlalchemy import select, or_
 import datetime
+import urllib.parse
 
 from src.auth.dependencies import current_optional_active_user
 
@@ -49,40 +50,6 @@ async def create_short_link(
     await session.refresh(link)
 
     return link
-
-
-@router.get("/{short_code}")
-async def redirect_to_original_url(
-    short_code: str,
-    session: AsyncSession = Depends(get_async_session),
-):
-    result = await session.execute(
-        select(Link).where(Link.short_code == short_code)
-    )
-    link = result.scalar_one_or_none()
-    
-    if not link:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Short link not found"
-        )
-    
-
-    # TODO:
-    # # Проверяем активна ли ссылка (если есть такое поле)
-    # if hasattr(link, 'is_active') and not link.is_active:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_410_GONE,
-    #         detail="This link has been deactivated"
-    #     )
-    
-    # # Инкрементируем счетчик кликов (если есть)
-    # if hasattr(link, 'clicks'):
-    #     link.clicks += 1
-    #     await session.commit()
-
-    return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-
 
 async def check_permission(user, link):
     if not link:
@@ -152,3 +119,75 @@ async def update_link(
     await session.refresh(link)
     
     return link
+
+
+
+
+
+@router.get("/search", response_model=List[LinkRead])
+async def search_links_by_url(
+    original_url: str = Query(..., description="Original URL to search for"),
+    exact_match: bool = Query(False, description="Search for exact match or partial"),
+    session: AsyncSession = Depends(get_async_session),
+    current_user: Optional[User] = Depends(current_optional_active_user),
+):
+    
+    decoded_url = urllib.parse.unquote(original_url)
+    print(decoded_url)
+    
+    query = select(Link)
+    
+    if exact_match:
+        query = query.where(Link.original_url == decoded_url)
+    else:
+        query = query.where(Link.original_url.ilike(f"%{decoded_url}%"))
+    
+    if current_user:
+        query = query.where(
+            or_(
+                Link.user_id == current_user.id,
+                Link.user_id == None
+            )
+        )
+    else:
+        query = query.where(Link.user_id == None)
+    
+    query = query.order_by(Link.created_at.desc())
+    
+    result = await session.execute(query)
+    links = result.scalars().all()
+    
+    return links
+
+
+@router.get("/{short_code}")
+async def redirect_to_original_url(
+    short_code: str,
+    session: AsyncSession = Depends(get_async_session),
+):
+    result = await session.execute(
+        select(Link).where(Link.short_code == short_code)
+    )
+    link = result.scalar_one_or_none()
+    
+    if not link:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Short link not found"
+        )
+    
+
+    # TODO:
+    # # Проверяем активна ли ссылка (если есть такое поле)
+    # if hasattr(link, 'is_active') and not link.is_active:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_410_GONE,
+    #         detail="This link has been deactivated"
+    #     )
+    
+    # # Инкрементируем счетчик кликов (если есть)
+    # if hasattr(link, 'clicks'):
+    #     link.clicks += 1
+    #     await session.commit()
+
+    return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
