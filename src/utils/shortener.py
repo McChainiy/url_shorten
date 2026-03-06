@@ -7,7 +7,6 @@ from src.models.links import Link
 MINIMUM = 6
 MAX_ATTEMPTS = 10
 
-#TODO: добавить проверку что такого кода еще нет
 async def generate_short_code(session: AsyncSession, length=MINIMUM):
     if length < MINIMUM: 
         raise ValueError(f"Length must be greater than {MINIMUM}")
