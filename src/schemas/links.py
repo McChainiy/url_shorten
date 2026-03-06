@@ -1,7 +1,24 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, Field, field_validator
+from typing import Optional
+import re
+
+# class LinkCreate(BaseModel):
+#     original_url: HttpUrl
 
 class LinkCreate(BaseModel):
     original_url: HttpUrl
+    custom_alias: Optional[str] = Field(
+        None, 
+        min_length=4, 
+        max_length=20,
+        description="Custom alias for short link (4-20 characters, alphanumeric + _ -)"
+    )
+    @field_validator('custom_alias')
+    def validate_alias(cls, v):
+        if v is not None:
+            if not re.match(r'^[a-zA-Z0-9_-]+$', v):
+                raise ValueError('Alias must contain only letters, numbers, underscore and hyphen')
+        return v
 
 class LinkRead(BaseModel):
     short_code: str
