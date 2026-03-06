@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.schemas.links import LinkCreate, LinkRead
+from src.schemas.links import LinkCreate, LinkRead, LinkUpdate
 from src.models.links import Link
 from src.auth.models import User
 from src.utils.shortener import generate_short_code
@@ -26,7 +26,7 @@ async def create_short_link(
     user: Optional[User] = Depends(current_optional_active_user)
 ):
     try:
-        expires_at = LinkService.validate_expiry_date(data.expires_at, user)
+        expires_at = LinkService.validate_expiry_date(data.expires_at, user).replace(tzinfo=None)
     except HTTPException as e:
         raise e
     except ValueError as e:
@@ -101,7 +101,7 @@ async def delete_link(
 @router.put("/{short_code}", response_model=LinkRead)
 async def update_link(
     short_code: str,
-    data: LinkCreate,
+    data: LinkUpdate,
     session: AsyncSession = Depends(get_async_session),
     user: User = Depends(current_optional_active_user),
 ):
@@ -113,10 +113,29 @@ async def update_link(
     await check_permission(user, link)
     
     link.original_url = str(data.original_url)
+
+    try:
+        expires_at = LinkService.validate_expiry_date(data.expires_at, user).replace(tzinfo=None)
+    except HTTPException as e:
+        raise e
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     
-    # TODO: добавить поле updated_at
-    # if hasattr(link, 'updated_at'):
-    #     link.updated_at = datetime.utcnow()
+    link.expires_at = expires_at
+
+###
+
+    # user_id = user.id if user else None
+
+    # link = Link(
+    #     original_url=str(data.original_url),
+    #     short_code=short_code,
+    #     user_id=user_id,
+    #     expires_at=expires_at,
+    #     is_active=True
+    # )
+
+###
     
     await session.commit()
     await session.refresh(link)
