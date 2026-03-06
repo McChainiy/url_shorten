@@ -20,7 +20,7 @@ class Link(Base):
     last_use: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=lambda: datetime.now(timezone.utc), nullable=True)
     clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
+    expires_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc), nullable=True)
 
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("user.id", ondelete="CASCADE"), nullable=True)
     user: Mapped[Optional["User"]] = relationship("User", back_populates="links")
