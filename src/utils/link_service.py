@@ -28,7 +28,7 @@ class LinkService:
         expires_at: Optional[datetime], 
         user: Optional[User]
     ) -> datetime:
-        # ВАЖНО - предполагаем что нам приходит время UTC
+        # ВАЖНО - предполагаем что нам приходит время в формате UTC
 
         user_type = cls.get_user_type(user)
         now = datetime.now(timezone.utc)

@@ -6,6 +6,7 @@ from src.auth.schemas import UserRead, UserCreate, UserUpdate
 
 from src.routers.links import router as link_router
 from src.routers.auth import router as auth_router
+
 app = FastAPI()
 
 

@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_async_session
-from src.schemas.links import LinkCreate, LinkRead, LinkUpdate
+from src.schemas.links import LinkCreate, LinkRead, LinkUpdate, LinkStats
 from src.models.links import Link
 from src.auth.models import User
 from src.utils.shortener import generate_short_code
@@ -11,6 +11,7 @@ from src.utils.check_alias import check_alias
 from typing import Optional, List
 from sqlalchemy import select, or_
 import datetime
+from datetime import timezone
 import urllib.parse
 
 from src.auth.dependencies import current_optional_active_user
@@ -122,28 +123,12 @@ async def update_link(
         raise HTTPException(status_code=400, detail=str(e))
     
     link.expires_at = expires_at
-
-###
-
-    # user_id = user.id if user else None
-
-    # link = Link(
-    #     original_url=str(data.original_url),
-    #     short_code=short_code,
-    #     user_id=user_id,
-    #     expires_at=expires_at,
-    #     is_active=True
-    # )
-
-###
+    link.updated_at = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
     
     await session.commit()
     await session.refresh(link)
     
     return link
-
-
-
 
 
 @router.get("/search", response_model=List[LinkRead])
@@ -207,9 +192,28 @@ async def redirect_to_original_url(
     #         detail="This link has been deactivated"
     #     )
     
-    # # Инкрементируем счетчик кликов (если есть)
-    # if hasattr(link, 'clicks'):
-    #     link.clicks += 1
-    #     await session.commit()
+
+    link.clicks += 1
+    link.last_use = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+    await session.commit()
 
     return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@router.get("/{short_code}/stats", response_model=LinkStats)
+async def get_link_stats(
+    short_code: str,
+    session: AsyncSession = Depends(get_async_session),
+):
+    result = await session.execute(
+        select(Link).where(Link.short_code == short_code)
+    )
+    link = result.scalar_one_or_none()
+    
+    if not link:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Short link not found"
+        )
+    
+    return link

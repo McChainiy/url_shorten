@@ -101,3 +101,16 @@ class LinkUpdate(BaseModel):
     
 
         return v_utc.replace(tzinfo=None)
+    
+
+class LinkStats(BaseModel):
+    short_code: str
+    original_url: str
+    clicks: int
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    last_use: Optional[datetime] = None
+    # days_since_creation: int
+    
+    

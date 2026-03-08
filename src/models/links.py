@@ -18,7 +18,7 @@ class Link(Base):
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     last_use: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=lambda: datetime.now(timezone.utc).replace(tzinfo=None), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, default=None, nullable=True)
 
