@@ -9,7 +9,7 @@ from src.auth.models import User
 from src.utils.shortener import generate_short_code
 from src.utils.check_alias import check_alias
 from typing import Optional, List
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
 import datetime
 from datetime import timezone
 import urllib.parse
@@ -171,11 +171,20 @@ async def search_links_by_url(
 
 @router.get("/my")
 async def get_my_links(
+    include_active: bool = Query(True, description="Search active links"),
+    include_inactive: bool = Query(True, description="Search inactive links"),
     session: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(current_active_user),
 ):
+
+    conditions = []
+    if include_active:
+        conditions.append(Link.is_active == True)
+    if include_inactive:
+        conditions.append(Link.is_active == False)
+
     result = await session.execute(
-        select(Link).where(Link.user_id == current_user.id)
+        select(Link).where(and_(Link.user_id == current_user.id, or_(*conditions)))
     )
     links = result.scalars().all()
     return links
