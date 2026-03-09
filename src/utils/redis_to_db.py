@@ -16,7 +16,6 @@ async def save_stats_to_db(redis, session):
     
         if last_use is None or clicks == 0:
             continue
-        # last_use = datetime.datetime.fromtimestamp(int(last_use), datetime.timezone.utc)
         last_use = datetime.datetime.fromtimestamp(int(last_use))
 
         await session.execute(

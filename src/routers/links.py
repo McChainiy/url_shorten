@@ -136,7 +136,7 @@ async def update_link(
 @router.get("/search", response_model=List[LinkRead])
 async def search_links_by_url(
     original_url: str = Query(..., description="Original URL to search for"),
-    exact_match: bool = Query(False, description="Search for exact match or partial"),
+    exact_match: bool = Query(False, description="Search for match"),
     session: AsyncSession = Depends(get_async_session),
     current_user: Optional[User] = Depends(current_optional_active_user),
 ):
@@ -227,8 +227,6 @@ async def redirect_to_original_url(
     await redis.incr(f"clicks:{short_code}")
     await redis.set(f"last_use:{short_code}", now)
 
-    # link.last_use = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
-    # await session.commit()
 
     return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 

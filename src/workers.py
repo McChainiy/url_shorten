@@ -5,7 +5,6 @@ import asyncio
 
 async def stats_worker():
     while True:
-        # async for session in get_async_session():
         async with async_session_maker() as session:
             await save_stats_to_db(redis, session)
 

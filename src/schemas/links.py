@@ -55,10 +55,6 @@ class LinkCreate(BaseModel):
         
         if v_utc < datetime.now(timezone.utc):
             raise ValueError(f'expires_at must be in the future\n{v_utc}\n{datetime.now(timezone.utc)}')
-        
-        # if v_utc.second != 0 or v_utc.microsecond != 0:
-        #     raise ValueError('expires_at must be precise to the minute (no seconds)')
-    
 
         return v_utc.replace(tzinfo=None)
     
@@ -90,9 +86,6 @@ class LinkUpdate(BaseModel):
         
         if v_utc < datetime.now(timezone.utc):
             raise ValueError(f'expires_at must be in the future\n{v_utc}\n{datetime.now(timezone.utc)}')
-        
-        # if v_utc.second != 0 or v_utc.microsecond != 0:
-        #     raise ValueError('expires_at must be precise to the minute (no seconds)')
     
 
         return v_utc.replace(tzinfo=None)
@@ -106,6 +99,5 @@ class LinkStats(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
     last_use: Optional[datetime] = None
-    # days_since_creation: int
     
     
