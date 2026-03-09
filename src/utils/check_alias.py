@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.links import Link
 from sqlalchemy import select
 
+TAKEN_CODES = ['search', 'my', 'info', 'stats', 'check', 'docs', 'redoc', 'openapi.json', 'help']
 
 async def check_alias(
         session: AsyncSession,
@@ -15,7 +16,7 @@ async def check_alias(
     )
     existing = result.scalar_one_or_none()
 
-    if existing:
+    if existing or alias in TAKEN_CODES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={

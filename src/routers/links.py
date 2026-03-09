@@ -14,8 +14,10 @@ import datetime
 from datetime import timezone
 import urllib.parse
 
-from src.auth.dependencies import current_optional_active_user
+from src.auth.dependencies import current_optional_active_user, current_active_user
 from src.utils.link_service import LinkService
+
+from src.redis import redis
 
 router = APIRouter(prefix="/links", tags=["links"])
 
@@ -91,7 +93,7 @@ async def delete_link(
     )
     link = result.scalar_one_or_none()
     
-    await check_permission()
+    await check_permission(user, link)
 
     await session.delete(link)
     await session.commit()
@@ -167,11 +169,32 @@ async def search_links_by_url(
     return links
 
 
+@router.get("/my")
+async def get_my_links(
+    session: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(current_active_user),
+):
+    result = await session.execute(
+        select(Link).where(Link.user_id == current_user.id)
+    )
+    links = result.scalars().all()
+    return links
+
+
 @router.get("/{short_code}")
 async def redirect_to_original_url(
     short_code: str,
     session: AsyncSession = Depends(get_async_session),
 ):
+    cache_key = f"key:{short_code}"
+    now = int(datetime.datetime.now(timezone.utc).replace(tzinfo=None).timestamp())
+
+    cache_url = await redis.get(cache_key)
+    if cache_url:
+        await redis.incr(f"clicks:{short_code}")
+        await redis.set(f"last_use:{short_code}", now)
+        return RedirectResponse(cache_url, status_code=307)
+    
     result = await session.execute(
         select(Link).where(Link.short_code == short_code)
     )
@@ -182,20 +205,21 @@ async def redirect_to_original_url(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Short link not found"
         )
-    
 
-    # TODO:
-    # # Проверяем активна ли ссылка (если есть такое поле)
-    # if hasattr(link, 'is_active') and not link.is_active:
-    #     raise HTTPException(
-    #         status_code=status.HTTP_410_GONE,
-    #         detail="This link has been deactivated"
-    #     )
-    
+    if not link.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This link has been deactivated"
+        )
 
-    link.clicks += 1
-    link.last_use = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
-    await session.commit()
+    ttl = 3600 if link.clicks < 10 else 3600 * 24
+    await redis.set(cache_key, link.original_url, ex=ttl)
+
+    await redis.incr(f"clicks:{short_code}")
+    await redis.set(f"last_use:{short_code}", now)
+
+    # link.last_use = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+    # await session.commit()
 
     return RedirectResponse(url=link.original_url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 

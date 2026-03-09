@@ -109,7 +109,7 @@ class LinkStats(BaseModel):
     clicks: int
     is_active: bool
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime]
     last_use: Optional[datetime] = None
     # days_since_creation: int
     
