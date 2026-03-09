@@ -66,10 +66,22 @@ class LinkRead(BaseModel):
 
 
 class LinkUpdate(BaseModel):
-    original_url: HttpUrl
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "original_url": "https://example.com",
+                "expires_at": week_later.isoformat(),
+            }
+        }
+    )
+    original_url: HttpUrl = Field(
+        None
+    )
+
     expires_at: Optional[datetime] = Field(
         None,
-        description="Когда ссылка истекает (ISO format). Пример: 1999-12-31T23:59:59",
+        description="When the link expires (strictly with timezone)! e.g. 2026-04-06T14:00:00+03:00",
     )
 
     @field_validator('expires_at')
@@ -80,13 +92,12 @@ class LinkUpdate(BaseModel):
             
         if v.tzinfo is None:
             raise ValueError(
-                "expires_at must include timezone! e.g. 1999-12-31T10:10:00+03:00"
+                "expires_at must include timezone! e.g. 2025-12-31T10:10:00+03:00"
             )
         v_utc = v.astimezone(timezone.utc)
         
         if v_utc < datetime.now(timezone.utc):
             raise ValueError(f'expires_at must be in the future\n{v_utc}\n{datetime.now(timezone.utc)}')
-    
 
         return v_utc.replace(tzinfo=None)
     

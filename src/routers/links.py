@@ -126,6 +126,7 @@ async def update_link(
     
     link.expires_at = expires_at
     link.updated_at = datetime.datetime.now(timezone.utc).replace(tzinfo=None)
+    link.is_active = True
     
     await session.commit()
     await session.refresh(link)
