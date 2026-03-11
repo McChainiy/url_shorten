@@ -35,4 +35,3 @@ app.include_router(link_router)
 @app.get("/")
 def root():
     return {"message": "Welcome to URL Shortener Service"}
-

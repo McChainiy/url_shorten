@@ -100,7 +100,7 @@ class LinkUpdate(BaseModel):
             raise ValueError(f'expires_at must be in the future\n{v_utc}\n{datetime.now(timezone.utc)}')
 
         return v_utc.replace(tzinfo=None)
-    
+
 
 class LinkStats(BaseModel):
     short_code: str
