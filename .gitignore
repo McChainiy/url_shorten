@@ -5,3 +5,4 @@ __pycache__/
 alembic/versions/*.pyc
 /venv
 .coverage
+*.db
