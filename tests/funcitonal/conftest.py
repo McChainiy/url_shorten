@@ -13,6 +13,8 @@ import src.redis
 from src.auth.models import User
 from src.auth.backend import auth_backend
 import uuid
+from src.models.links import Link
+import datetime
 
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
@@ -111,3 +113,30 @@ def mock_redis(monkeypatch):
 
 
     return redis_mock
+
+# создание ссылок
+@pytest_asyncio.fixture
+async def create_links(auth_client, db, test_user):
+    # создаём ссылки разных пользователей
+    links_data = [
+        {"original_url": "https://example.com", "user_id": test_user.id},
+        {"original_url": "https://example.org", "user_id": None},
+        {"original_url": "https://example.net", "user_id": None},
+    ]
+
+    created_links = []
+    for c, data in enumerate(links_data):
+        link = Link(
+            original_url=data["original_url"],
+            short_code=f"code_{str(uuid.uuid4())[:8]}",
+            created_at=datetime.datetime.utcnow(),
+            user_id=data["user_id"],
+            is_active=True,
+        )
+        db.add(link)
+        created_links.append(link)
+    await db.commit()
+    for link in created_links:
+        await db.refresh(link)
+
+    return created_links
