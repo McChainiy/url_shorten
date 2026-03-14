@@ -1,4 +1,3 @@
-# tests/test_lifespan.py
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from contextlib import asynccontextmanager

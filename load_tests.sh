@@ -1,12 +1,12 @@
 #!/bin/bash
 
-echo "Запускаем тестовое окружение..."
+echo "Launching test environment..."
 docker-compose -f docker-compose.load-test.yml up -d
 
 
-echo "Запускаем нагрузочное тестирование..."
+echo "Launching load tests..."
 locust -f tests/load/locustfile.py --host=http://localhost:8001 --users 50 --spawn-rate 5
 
 
-echo "Очищаем тестовое окружение..."
+echo "Clearing up test environment..."
 docker-compose -f docker-compose.load-test.yml down -v

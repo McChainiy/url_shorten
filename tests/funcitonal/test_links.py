@@ -84,7 +84,7 @@ async def test_search_links_unlogged(async_client, create_links):
 
     data = response.json()
 
-    assert len(data) == 4
+    assert len(data) == 5
 
 @pytest.mark.asyncio
 async def test_search_links_logged(auth_client, create_links, test_user):

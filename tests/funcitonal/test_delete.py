@@ -67,37 +67,22 @@ async def test_delete_link_other(auth_client, db):
     assert response.status_code == 403
 
 
-# @pytest.mark.asyncio
-# async def test_delete_link_anonymous(auth_client, db, async_client):
+@pytest.mark.asyncio
+async def test_delete_anonymous_link_forbidden(auth_client, db):
 
-#     create = await async_client.post(
-#         "/links/shorten",
-#         json={"original_url": "https://example.com"}
-#     )
+    create = await auth_client.post(
+        "/links/shorten",
+        json={"original_url": "https://example.com"}
+    )
 
-#     short_code = create.json()["short_code"]
+    short_code = create.json()["short_code"]
+    result = await db.execute(
+        select(Link).where(Link.short_code == short_code)
+    )
+    link = result.scalar_one()
+    link.user_id = None
+    await db.commit()
 
-#     response = await auth_client.delete(f"/links/{short_code}")
+    response = await auth_client.delete(f"/links/{short_code}")
 
-#     assert response.status_code == 403
-
-
-# @pytest.mark.asyncio
-# async def test_delete_anonymous_link_forbidden(auth_client, db):
-
-#     create = await auth_client.post(
-#         "/links/shorten",
-#         json={"original_url": "https://example.com"}
-#     )
-
-#     short_code = create.json()["short_code"]
-#     result = await db.execute(
-#         select(Link).where(Link.short_code == short_code)
-#     )
-#     link = result.scalar_one()
-#     link.user_id = None
-#     await db.commit()
-
-#     response = await auth_client.delete(f"/links/{short_code}")
-
-#     assert response.status_code == 403
+    assert response.status_code == 403
