@@ -136,7 +136,6 @@ def mock_redis(monkeypatch):
 # создание ссылок
 @pytest_asyncio.fixture
 async def create_links(auth_client, db, test_user):
-    # создаём ссылки разных пользователей
     links_data = [
         {"original_url": "https://example.com", "user_id": test_user.id},
         {"original_url": "https://example.org", "user_id": None},

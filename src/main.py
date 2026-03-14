@@ -17,10 +17,13 @@ import asyncio
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     expire_task = asyncio.create_task(expire_service.run_periodic_cleanup(interval=10))
-    asyncio.create_task(stats_worker())
+    stats_task = asyncio.create_task(stats_worker())
+
     yield
+
     expire_service.stop()
     expire_task.cancel()
+    stats_task.cancel()
     await redis.close()
 
 app = FastAPI(lifespan=lifespan)

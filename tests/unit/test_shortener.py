@@ -1,28 +1,3 @@
-# from src.utils.shortener import generate_short_code
-# from src.database import get_async_session
-# import pytest
-
-# @pytest.mark.asyncio
-# async def test_shortener():
-#     async for session in get_async_session():
-#         code = await generate_short_code(session)
-#         code2 = await generate_short_code(session)
-
-#         assert code != code2
-#         assert len(code) == 6
-
-# # def test_short_code_length():
-# #     code = generate_short_code()
-
-# #     assert len(code) == 6
-
-
-# # def test_short_code_unique():
-# #     code1 = generate_short_code()
-# #     code2 = generate_short_code()
-
-# #     assert code1 != code2
-
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 

@@ -13,7 +13,11 @@ omit =
     ; src/utils/shortener.py
     */migrations/*
     */tests/*
+    
+disable_warnings = True
 
 [coverage:run]
 concurrency = greenlet
           thread
+
+
