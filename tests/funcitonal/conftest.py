@@ -5,9 +5,10 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.pool import NullPool, StaticPool
 from src.main import app
 from src.database import get_async_session
+from src.auth.dependencies import current_optional_active_user, current_active_user
 from src.models.base import Base
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from unittest.mock import AsyncMock, patch
 import src.redis
 from src.auth.models import User
@@ -20,7 +21,8 @@ import datetime
 TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
 engine_test = create_async_engine(
     TEST_DB_URL,
-    poolclass=StaticPool,
+    connect_args={"check_same_thread": False},
+    # poolclass=StaticPool,
 )
 
 TestSession = async_sessionmaker(
@@ -57,12 +59,21 @@ async def prepare_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-# клиент без авторизации
+# # клиент без авторизации
+# @pytest_asyncio.fixture
+# async def async_client():
+#     async with AsyncClient(app=app, base_url="http://test") as a_client:
+#         yield a_client
+
 @pytest_asyncio.fixture
 async def async_client():
-    async with AsyncClient(app=app, base_url="http://test") as a_client:
-        yield a_client
+    transport = ASGITransport(app=app)
 
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://test"
+    ) as client:
+        yield client
 
 # клиент с авторизацией
 @pytest_asyncio.fixture
@@ -97,6 +108,14 @@ async def auth_client(async_client, auth_token):
     })
 
     return async_client
+
+@pytest_asyncio.fixture
+async def override_user(test_user):
+    async def _override_user():
+        return test_user
+    app.dependency_overrides[current_optional_active_user] = _override_user
+    yield
+    app.dependency_overrides.pop(current_optional_active_user, None)
 
 # мок редиса
 @pytest.fixture(autouse=True)

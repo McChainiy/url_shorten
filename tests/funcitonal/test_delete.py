@@ -26,9 +26,6 @@ async def test_delete_link_logged(auth_client, db):
               "custom_alias": f"{short_code}"}
     )
 
-    # short_code = create.json()["short_code"]
-    
-
     response = await auth_client.delete(f"/links/{short_code}")
 
     assert response.status_code == 204
@@ -37,6 +34,12 @@ async def test_delete_link_logged(auth_client, db):
         select(Link).where(Link.short_code == short_code)
     )
     link = result.scalar_one_or_none()
+
+    create = await auth_client.post(
+        "/links/shorten",
+        json={"original_url": "https://example.com",
+              "custom_alias": f"{short_code}"}
+    )
 
     assert link is None
 
@@ -56,16 +59,45 @@ async def test_delete_link_404(auth_client, db):
 
 
 @pytest.mark.asyncio
-async def test_delete_link_403(auth_client, db):
-
-    create = await auth_client.post(
-        "/links/shorten",
-        json={"original_url": "https://example.com"}
-    )
-
-    # short_code = create.json()["short_code"]
+async def test_delete_link_other(auth_client, db):
     short_code = 'wtf12345'
 
     response = await auth_client.delete(f"/links/{short_code}")
 
-    assert response.status_code == 404
+    assert response.status_code == 403
+
+
+# @pytest.mark.asyncio
+# async def test_delete_link_anonymous(auth_client, db, async_client):
+
+#     create = await async_client.post(
+#         "/links/shorten",
+#         json={"original_url": "https://example.com"}
+#     )
+
+#     short_code = create.json()["short_code"]
+
+#     response = await auth_client.delete(f"/links/{short_code}")
+
+#     assert response.status_code == 403
+
+
+# @pytest.mark.asyncio
+# async def test_delete_anonymous_link_forbidden(auth_client, db):
+
+#     create = await auth_client.post(
+#         "/links/shorten",
+#         json={"original_url": "https://example.com"}
+#     )
+
+#     short_code = create.json()["short_code"]
+#     result = await db.execute(
+#         select(Link).where(Link.short_code == short_code)
+#     )
+#     link = result.scalar_one()
+#     link.user_id = None
+#     await db.commit()
+
+#     response = await auth_client.delete(f"/links/{short_code}")
+
+#     assert response.status_code == 403

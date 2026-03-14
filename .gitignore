@@ -6,3 +6,4 @@ alembic/versions/*.pyc
 /venv
 .coverage
 *.db
+.DS_Store
