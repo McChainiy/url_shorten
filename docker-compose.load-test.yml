@@ -9,7 +9,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/url_shorten  # 👈 Переопределяем, если нужно
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/url_shorten
     depends_on:
       postgres:
         condition: service_healthy

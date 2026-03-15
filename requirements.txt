@@ -45,7 +45,6 @@ packaging==26.0
 passlib==1.7.4
 pluggy==1.6.0
 psutil==7.2.2
-psycopg2==2.9.11
 psycopg2-binary==2.9.9
 pwdlib==0.3.0
 pyasn1==0.6.2
