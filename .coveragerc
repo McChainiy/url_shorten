@@ -1,0 +1,23 @@
+[run]
+omit =
+    */test_*
+    */__init__.py
+    src/redis.py
+    src/workers.py
+    utils/legacy_*.py
+    src/database.py
+    src/config.py
+    ; src/models/base.py
+    ; src/models/links.py
+    ; src/utils/check_alias.py
+    ; src/utils/shortener.py
+    */migrations/*
+    */tests/*
+    
+disable_warnings = True
+
+[coverage:run]
+concurrency = greenlet
+          thread
+
+

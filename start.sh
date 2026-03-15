@@ -1,11 +1,6 @@
 #!/bin/sh
 
 echo "Updating DB"
-
-echo "Current directory: $(pwd)"
-echo "Files in /app:"
-ls -la
-
 alembic upgrade head
 
 echo "Starting FastAPI"

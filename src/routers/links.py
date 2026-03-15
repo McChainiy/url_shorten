@@ -37,9 +37,11 @@ async def create_short_link(
     
     if data.custom_alias:
         short_code = await check_alias(session, data.custom_alias)
-        
     else:
         short_code = await generate_short_code(session)
+
+    # TODO: временно для тестов
+    # print(f"SHORT_CODE: {short_code}")
 
     user_id = user.id if user else None
 
@@ -143,7 +145,7 @@ async def search_links_by_url(
 ):
     
     decoded_url = urllib.parse.unquote(original_url)
-    print(decoded_url)
+    # print(decoded_url)
     
     query = select(Link)
     
