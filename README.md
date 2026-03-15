@@ -162,7 +162,7 @@
 
         git clone https://github.com/McChainiy/url_shorten
         cd url_shorten
-        cp .env.example .env #настраиваем окружение как в docker-compose.yml
+        cp .env.example .env #настраиваем окружение для docker
         docker compose up --build
 
 

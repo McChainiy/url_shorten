@@ -22,8 +22,8 @@ class LinkShortenerUser(HttpUser):
                 "password": self.password
             }
         )
-        if response.status_code == 201:
-            print(f"User {self.email} registered")
+        # if response.status_code == 201:
+        #     print(f"User {self.email} registered")
     
     def login_user(self):
         response = self.client.post(
@@ -35,7 +35,7 @@ class LinkShortenerUser(HttpUser):
         )
         if response.status_code == 200:
             self.token = response.json()["access_token"]
-            print(f"User {self.email} logged in")
+            # print(f"User {self.email} logged in")
     
     def get_headers(self):
         if self.token:
